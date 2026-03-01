@@ -3,15 +3,36 @@ package main
 import (
 	"fmt"
 	"net/http"
+
+	"eduscale/configs"
+	"eduscale/internal/handlers"
+
+	"github.com/gorilla/mux"
 )
 
 func main() {
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "EduScale API Running")
-	})
+	configs.ConnectDB()
 
-	fmt.Println("Server started on :8080")
+	router := mux.NewRouter()
 
-	http.ListenAndServe(":8080", nil)
+	router.HandleFunc(
+		"/register",
+		handlers.Register,
+	).Methods("POST")
+
+	router.HandleFunc(
+		"/login",
+		handlers.Login,
+	).Methods("POST")
+
+	router.HandleFunc(
+		"/users",
+		handlers.GetUsers,
+	).Methods("GET")
+
+	fmt.Println("Server running on :8080")
+
+	http.ListenAndServe(":8080", router)
+
 }
