@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"golang.org/x/crypto/bcrypt"
 
 	"eduscale/internal/models"
 	"eduscale/internal/repository"
@@ -9,8 +10,18 @@ import (
 
 func RegisterUser(user models.User) error {
 
-	return repository.CreateUser(user)
+	hashedPassword, err := bcrypt.GenerateFromPassword(
+		[]byte(user.Password),
+		bcrypt.DefaultCost,
+	)
 
+	if err != nil {
+		return err
+	}
+
+	user.Password = string(hashedPassword)
+
+	return repository.CreateUser(user)
 }
 
 func LoginUser(email string, password string) (models.User, error) {
@@ -21,7 +32,12 @@ func LoginUser(email string, password string) (models.User, error) {
 		return user, err
 	}
 
-	if user.Password != password {
+	err = bcrypt.CompareHashAndPassword(
+		[]byte(user.Password),
+		[]byte(password),
+	)
+
+	if err != nil {
 		return user, errors.New("invalid password")
 	}
 
